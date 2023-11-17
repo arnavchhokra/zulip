@@ -247,7 +247,7 @@ function buddy_list_add(user_id, $stub) {
     }
     $stub.length = 1;
     const sel = `li.user_sidebar_entry[data-user-id='${CSS.escape(user_id)}']`;
-    $("#user_presences").set_find_results(sel, $stub);
+    $("#buddy-list-users-matching-view").set_find_results(sel, $stub);
 }
 
 test("direct_message_update_dom_counts", () => {
@@ -305,7 +305,7 @@ test("handlers", ({override, mock_template}) => {
             keys: [me.user_id, alice.user_id, fred.user_id],
         });
         activity_ui.set_cursor_and_filter();
-        $("#user_presences").empty = () => {};
+        $("#buddy-list-users-matching-view").empty = () => {};
 
         $me_li = $.create("me stub");
         $alice_li = $.create("alice stub");
@@ -400,6 +400,7 @@ test("first/prev/next", ({override, mock_template}) => {
                         WITH_STATUS: true,
                         WITH_AVATAR: false,
                     },
+                    should_add_guest_user_indicator: false,
                 });
                 break;
             case fred.user_id:
@@ -419,6 +420,7 @@ test("first/prev/next", ({override, mock_template}) => {
                         WITH_STATUS: true,
                         WITH_AVATAR: false,
                     },
+                    should_add_guest_user_indicator: false,
                 });
                 break;
             /* istanbul ignore next */
@@ -489,6 +491,7 @@ test("insert_one_user_into_empty_list", ({override, mock_template}) => {
                 WITH_STATUS: true,
                 WITH_AVATAR: false,
             },
+            should_add_guest_user_indicator: false,
         });
         assert.ok(html.startsWith("<li data-user-id="));
         return html;
@@ -596,7 +599,7 @@ test("realm_presence_disabled", () => {
 test("redraw_muted_user", () => {
     muted_users.add_muted_user(mark.user_id);
     activity_ui.redraw_user(mark.user_id);
-    assert.equal($("#user_presences").html(), "never-been-set");
+    assert.equal($("#buddy-list-users-matching-view").html(), "never-been-set");
 });
 
 test("update_presence_info", ({override}) => {
@@ -652,7 +655,7 @@ test("initialize", ({override, mock_template}) => {
 
     function clear() {
         $.clear_all_elements();
-        buddy_list.$container = $("#user_presences");
+        buddy_list.$container = $("#buddy-list-users-matching-view");
         buddy_list.$container.append = () => {};
         clear_buddy_list();
         page_params.presences = {};
@@ -684,6 +687,9 @@ test("initialize", ({override, mock_template}) => {
     payload.success({
         zephyr_mirror_active: true,
         presences: {},
+        msg: "",
+        result: "success",
+        server_timestamp: 0,
     });
     $(window).trigger("focus");
     clear();
@@ -705,6 +711,9 @@ test("initialize", ({override, mock_template}) => {
     payload.success({
         zephyr_mirror_active: false,
         presences: {},
+        msg: "",
+        result: "success",
+        server_timestamp: 0,
     });
 
     assert.ok($("#zephyr-mirror-error").hasClass("show"));

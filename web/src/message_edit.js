@@ -32,6 +32,7 @@ import * as message_live_update from "./message_live_update";
 import * as message_store from "./message_store";
 import * as message_viewport from "./message_viewport";
 import {page_params} from "./page_params";
+import * as people from "./people";
 import * as resize from "./resize";
 import * as rows from "./rows";
 import * as settings_data from "./settings_data";
@@ -153,12 +154,23 @@ export function is_content_editable(message, edit_limit_seconds_buffer = 0) {
     return false;
 }
 
+export function is_message_sent_by_my_bot(message) {
+    const user = people.get_by_user_id(message.sender_id);
+    if (user.bot_owner_id === undefined || user.bot_owner_id === null) {
+        // The message was not sent by a bot or the message was sent
+        // by a cross-realm bot which does not have an owner.
+        return false;
+    }
+
+    return people.is_my_user_id(user.bot_owner_id);
+}
+
 export function get_deletability(message) {
     if (page_params.is_admin) {
         return true;
     }
 
-    if (!message.sent_by_me) {
+    if (!message.sent_by_me && !is_message_sent_by_my_bot(message)) {
         return false;
     }
     if (message.locally_echoed) {
@@ -946,7 +958,8 @@ export function save_message_row_edit($row) {
         changed = old_content !== new_content;
     }
 
-    const already_has_wildcard_mention = message.wildcard_mentioned;
+    const already_has_wildcard_mention =
+        message.stream_wildcard_mentioned || message.topic_wildcard_mentioned;
     if (!already_has_wildcard_mention) {
         const wildcard_mention = util.find_wildcard_mentions(new_content);
         const is_stream_message_mentions_valid = compose_validate.validate_stream_message_mentions({
@@ -1057,15 +1070,20 @@ export function save_message_row_edit($row) {
                 }
 
                 hide_message_edit_spinner($row);
-                const message = channel.xhr_error_message("", xhr);
-                const $container = compose_banner.get_compose_banner_container(
-                    $row.find("textarea"),
-                );
-                compose_banner.show_error_message(
-                    message,
-                    compose_banner.CLASSNAMES.generic_compose_error,
-                    $container,
-                );
+                if (xhr.readyState !== 0) {
+                    const message = channel.xhr_error_message(
+                        $t({defaultMessage: "Error editing message"}),
+                        xhr,
+                    );
+                    const $container = compose_banner.get_compose_banner_container(
+                        $row.find("textarea"),
+                    );
+                    compose_banner.show_error_message(
+                        message,
+                        compose_banner.CLASSNAMES.generic_compose_error,
+                        $container,
+                    );
+                }
             }
         },
     });

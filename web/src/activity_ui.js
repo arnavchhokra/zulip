@@ -210,13 +210,14 @@ export function set_cursor_and_filter() {
 
 export function initiate_search() {
     if (user_filter) {
+        popovers.hide_all();
         user_filter.initiate_search();
     }
 }
 
 export function escape_search() {
     if (user_filter) {
-        user_filter.escape_search();
+        user_filter.clear_and_hide_search();
     }
 }
 

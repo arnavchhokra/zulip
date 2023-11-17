@@ -1,5 +1,7 @@
 import $ from "jquery";
 
+import type {GroupPermissionSetting} from "./types";
+
 const t1 = performance.now();
 export const page_params: {
     apps_page_url: string;
@@ -10,6 +12,15 @@ export const page_params: {
         allowed: boolean;
     }[];
     corporate_enabled: boolean;
+    custom_profile_fields: {
+        display_in_profile_summary?: boolean;
+        field_data: string;
+        hint: string;
+        id: number;
+        name: string;
+        order: number;
+        type: number;
+    }[];
     delivery_email: string;
     development_environment: boolean;
     is_admin: boolean;
@@ -68,6 +79,7 @@ export const page_params: {
     realm_private_message_policy: number;
     realm_push_notifications_enabled: boolean;
     realm_sentry_key: string | undefined;
+    realm_enable_guest_user_indicator: boolean;
     realm_upload_quota_mib: number | null;
     realm_uri: string;
     realm_user_group_edit_policy: number;
@@ -83,13 +95,18 @@ export const page_params: {
     server_sentry_environment: string | undefined;
     server_sentry_sample_rate: number | undefined;
     server_sentry_trace_rate: number | undefined;
+    server_supported_permission_settings: {
+        realm: Record<string, GroupPermissionSetting>;
+        stream: Record<string, GroupPermissionSetting>;
+        group: Record<string, GroupPermissionSetting>;
+    };
     server_web_public_streams_enabled: boolean;
     show_billing: boolean;
     show_plans: boolean;
     show_webathena: boolean;
+    sponsorship_pending: boolean;
     translation_data: Record<string, string>;
     user_id: number | undefined;
-    webpack_public_path: string;
     zulip_merge_base: string;
     zulip_plan_is_not_limited: boolean;
     zulip_version: string;

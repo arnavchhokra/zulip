@@ -171,6 +171,7 @@ import {get_string_diff} from "../../src/util";
     this.on_move = this.options.on_move;
     this.on_escape = this.options.on_escape;
     this.header = this.options.header || this.header;
+    this.option_label = this.options.option_label || this.option_label;
 
     if (this.fixed) {
       this.$container.css('position', 'fixed');
@@ -199,9 +200,6 @@ import {get_string_diff} from "../../src/util";
         // select / highlight the minimal text to be replaced
         this.$element[0].setSelectionRange(from, to_before);
         insert(this.$element[0], replacement);
-        // Blurring and refocusing ensures the cursor is in view.
-        this.$element.trigger("blur");
-        this.$element.trigger("focus");
       }
 
       return this.hide()
@@ -231,6 +229,11 @@ import {get_string_diff} from "../../src/util";
   , header: function() {
     // return a string to show in typeahead header or false.
     return false;
+  }
+
+  , option_label: function (matching_items, item) {
+    // return a string to show in typeahead items or false.
+    return false
   }
 
   , show: function () {
@@ -312,20 +315,18 @@ import {get_string_diff} from "../../src/util";
   , process: function (items) {
       var that = this
 
-      items = $.grep(items, function (item) {
-        return that.matcher(item)
-      })
+      const matching_items = $.grep(items, (item) => this.matcher(item));
 
-      items = this.sorter(items)
+      const final_items = this.sorter(matching_items);
 
-      if (!items.length) {
+      if (!final_items.length) {
         return this.shown ? this.hide() : this
       }
       if (this.automated()) {
         this.select();
         return this;
       }
-      return this.render(items.slice(0, this.options.items)).show()
+      return this.render(final_items.slice(0, this.options.items), matching_items).show();
     }
 
   , matcher: function (item) {
@@ -354,12 +355,18 @@ import {get_string_diff} from "../../src/util";
       })
     }
 
-  , render: function (items) {
+  , render: function (final_items, matching_items) {
       var that = this
 
-      items = $(items).map(function (i, item) {
-        i = $(that.options.item).data('typeahead-value', item)
-        i.find('a').html(that.highlighter(item))
+      const items = $(final_items).map((index, item) => {
+        const i = $(that.options.item).data('typeahead-value', item)
+        const item_html = i.find('a').html(that.highlighter(item))
+
+        const option_label_html = that.option_label(matching_items, item)
+
+        if (option_label_html) {
+          item_html.append(option_label_html).addClass("typeahead-option-label");
+        }
         return i[0]
       })
 
